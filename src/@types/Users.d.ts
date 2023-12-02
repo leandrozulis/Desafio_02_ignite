@@ -1,5 +1,3 @@
-import {knex} from 'knex';
-
 declare module 'knex/types/tables' {
        export interface Tables {
               refeicoes: {
@@ -7,7 +5,7 @@ declare module 'knex/types/tables' {
                      identificacaoUser: string,
                      nome: string,
                      descricao: string,
-                     dieta: boolean,
+                     dieta: string,
                      created_at: string
               }
        }
