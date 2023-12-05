@@ -1,4 +1,4 @@
-# Desafio_02_ignite
+# Desafio_02_ignite 🚀
 
 ## Segundo Desafio proposto pela equipe da RocketSeat
 <p>O objetivo do projeto é criar algumas rotas de um sistema de controle de dietas.</p>
