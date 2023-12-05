@@ -71,4 +71,23 @@ export async function routeUsers(app: FastifyInstance) {
         return { usuario };
     });
 
+    app.get('/metricas', {
+        preHandler: validaIdentificadorUser
+    }, async (request, reply) => {
+
+        const { identificacaoUser } = request.cookies;
+
+        const usuario = await knex('quantidades')
+            .where({
+                identificacaoUser
+            })
+            .first();
+
+        const metrica = (100 * usuario.quantidadeDentro) / usuario.quantidadeTotal;
+
+        return reply.status(200).send({
+            mensagem: `${metrica.toFixed(2)}% das refeições dentro da dieta`
+        });
+    });
+
 }

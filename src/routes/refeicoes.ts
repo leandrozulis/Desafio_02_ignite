@@ -31,7 +31,30 @@ export async function routeRefeicoes(app: FastifyInstance) {
             .where('identificacaoUser', identificacaoUser)
             .select('*');
 
-        if (validaRefeicoes[0]) {
+        console.log(validaRefeicoes.length > 0);
+
+        if (validaRefeicoes.length > 0) {
+            if (dieta) {
+                await knex('quantidades')
+                    .where('identificacaoUser', identificacaoUser)
+                    .increment({
+                        quantidadeTotal: 1,
+                        quantidadeDentro: 1,
+                        melhorSequencia: 1
+                    });
+                return reply.status(200).send('>0 increment');
+            } else {
+                await knex('quantidades')
+                    .where('identificacaoUser', identificacaoUser)
+                    .increment({
+                        quantidadeTotal: 1,
+                        quantidadeFora: 1,
+                    }).update({
+                        melhorSequencia: 0
+                    });
+                return reply.status(200).send('>0 decrement');
+            }
+        } else {
             await knex('quantidades')
                 .where('identificacaoUser', identificacaoUser)
                 .insert({
@@ -58,35 +81,13 @@ export async function routeRefeicoes(app: FastifyInstance) {
                     .increment({
                         quantidadeTotal: 1,
                         quantidadeFora: 1,
-                    }).decrement({
+                    }).update({
                         melhorSequencia: 0
                     });
                 return reply.status(200).send('Quantidade Decrement!');
             }
-        } else {
-            if (dieta) {
-                await knex('quantidades')
-                    .where('identificacaoUser', identificacaoUser)
-                    .increment({
-                        quantidadeTotal: 1,
-                        quantidadeDentro: 1,
-                        melhorSequencia: 1
-                    });
-                return reply.status(200).send('else increment');
-            } else {
-                await knex('quantidades')
-                    .where('identificacaoUser', identificacaoUser)
-                    .increment({
-                        quantidadeTotal: 1,
-                        quantidadeFora: 1,
-                    }).decrement({
-                        melhorSequencia: 0
-                    });
-                return reply.status(200).send('else decrement');
-            }
         }
     });
-
 
     // Lista todas as refeições
     app.get('/', {
@@ -113,16 +114,15 @@ export async function routeRefeicoes(app: FastifyInstance) {
 
         const { identificacaoUser } = request.cookies;
 
-        const user = await knex('refeicoes')
+        const refeicao = await knex('refeicoes')
             .where({
                 id,
                 identificacaoUser
             })
             .first();
 
-        return { user };
+        return { refeicao };
     });
-
     
     //Altera uma refeição
     app.put('/:id', {
@@ -135,32 +135,64 @@ export async function routeRefeicoes(app: FastifyInstance) {
             dieta: z.optional(z.boolean())
         });
 
+        const idParams = z.object({
+            id: z.string().uuid()
+        });
+
         const { identificacaoUser } = request.cookies;
 
         const { nome, descricao, dieta } = bodySchema.parse(request.body);
+        const { id } = idParams.parse(request.params);
 
         await knex('refeicoes')
-            .where('identificacaoUser', identificacaoUser)
+            .where({
+                id,
+                identificacaoUser
+            })
             .update({
                 nome: nome,
                 descricao: descricao,
                 dieta: dieta
             });
 
-        reply.status(200).send('Dados alterados');
+        return reply.status(200).send('Dados alterados');
     });
 
     // Apaga uma refeição
     app.delete('/:id', {
         preHandler: validaIdentificadorUser
     },async (request, reply) => {
+        const idParams = z.object({
+            id: z.string().uuid()
+        });
+
         const { identificacaoUser } = request.cookies;
 
-        await knex('refeicoes')
-            .where('identificacaoUser', identificacaoUser)
-            .del();
+        const { id } = idParams.parse(request.params);
 
-        reply.status(200).send('Refeição Deletada!');
+        const validaID = await knex('refeicoes').where({ id, identificacaoUser }).select('id');
+
+        try {
+            if (validaID[0].id === id) {
+                await knex('refeicoes')
+                    .where({
+                        id,
+                        identificacaoUser
+                    })
+                    .del();
+        
+                await knex('quantidades')
+                    .where({
+                        identificacaoUser
+                    })
+                    .del();
+
+                return reply.status(200).send('Refeição Deletada!');
+            }
+        } catch (error) {
+            return reply.status(400).send({message: 'Valor informado inválido!'});
+        }
+
     });
 
 }
