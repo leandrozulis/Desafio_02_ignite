@@ -9,6 +9,8 @@
 <p>• Crie um arquivo na raiz chamado .env e configure a variável de ambiente igual no .env.example passando a URL de onde o banco irá ser criado.</p>
 <p>• npm run knex -- migrage:latest (Para subir as migrations do banco de dados)</p>
 <p>• npm run dev (Para subir o servidor na porta 3333)</p>
+
+<p>Observação: Foi utilizado a versão v20.9.0 do Node!</p>
 <hr>
 <br>
 
