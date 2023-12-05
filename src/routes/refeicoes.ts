@@ -31,8 +31,6 @@ export async function routeRefeicoes(app: FastifyInstance) {
             .where('identificacaoUser', identificacaoUser)
             .select('*');
 
-        console.log(validaRefeicoes.length > 0);
-
         if (validaRefeicoes.length > 0) {
             if (dieta) {
                 await knex('quantidades')
